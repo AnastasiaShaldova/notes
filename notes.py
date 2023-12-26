@@ -45,14 +45,14 @@ class NoteManager:
     def read_note(self, note_id):
         try:
             with open(self.file_path, 'r') as file:
-                for line in file:
-                    note = json.loads(line)
-                    if note['id'] == note_id:
+                data = json.load(file)
+                for line in data:
+                    if line['id'] == note_id:
                         print('Заметка найдена! 📄')
-                        print('ID:', note['id'])
-                        print('Заголовок:', note['title'])
-                        print('Текст:', note['text'])
-                        print('Создана:', note['timestamp'])
+                        print('ID:', line['id'])
+                        print('Заголовок:', line['title'])
+                        print('Текст:', line['text'])
+                        print('Создана:', line['timestamp'])
                         return
 
                 print('Заметка с указанным ID не найдена. 😔')
@@ -63,20 +63,17 @@ class NoteManager:
     def edit_note(self, note_id, new_title, new_text):
         try:
             with open(self.file_path, 'r+') as file:
-                notes = []
-                for line in file:
-                    note = json.loads(line)
+                notes = json.load(file)
+                for note in notes:
                     if note['id'] == note_id:
                         note['title'] = new_title
                         note['text'] = new_text
                         note['timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                    notes.append(note)
+                        break
 
                 file.seek(0)
                 file.truncate(0)
-                for note in notes:
-                    json.dump(note, file, ensure_ascii=False, indent=4)
-                    file.write('\n')
+                json.dump(notes, file, ensure_ascii=False, indent=4)
 
                 print('Заметка отредактирована успешно! ✏️')
 
@@ -86,17 +83,14 @@ class NoteManager:
     def delete_note(self, note_id):
         try:
             with open(self.file_path, 'r+') as file:
-                notes = []
-                for line in file:
-                    note = json.loads(line)
-                    if note['id'] != note_id:
-                        notes.append(note)
+                notes = json.load(file)
+                for line in notes:
+                    if line['id'] == note_id:
+                        notes.remove(line)
 
                 file.seek(0)
                 file.truncate(0)
-                for note in notes:
-                    json.dump(note, file, ensure_ascii=False, indent=4)
-                    file.write('\n')
+                json.dump(notes, file, ensure_ascii=False, indent=4)
 
                 print('Заметка удалена успешно! 🗑️')
 
@@ -113,15 +107,15 @@ if __name__ == '__main__':
     add_parser.add_argument('text', type=str, help='Текст заметки')
 
     read_parser = subparsers.add_parser('read', help='Прочитать заметку')
-    read_parser.add_argument('note_id', type=str, help='ID заметки')
+    read_parser.add_argument('note_id', type=int, help='ID заметки')
 
     edit_parser = subparsers.add_parser('edit', help='Отредактировать заметку')
-    edit_parser.add_argument('note_id', type=str, help='ID заметки')
+    edit_parser.add_argument('note_id', type=int, help='ID заметки')
     edit_parser.add_argument('new_title', type=str, help='Новый заголовок заметки')
     edit_parser.add_argument('new_text', type=str, help='Новый текст заметки')
 
     delete_parser = subparsers.add_parser('delete', help='Удалить заметку')
-    delete_parser.add_argument('note_id', type=str, help='ID заметки')
+    delete_parser.add_argument('note_id', type=int, help='ID заметки')
 
     args = parser.parse_args()
 
